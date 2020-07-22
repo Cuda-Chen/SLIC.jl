@@ -124,8 +124,20 @@ function slic(img, K, M, iterations=10)
     end
 
     # Create output image
+    out_image = image_lab.copy()
+    for cluster in clusters
+        for pixel in cluster.pixels
+            out_image[pixel[1]][pixel[2]][1] = cluster.l
+            out_image[pixel[1]][pixel[2]][2] = cluster.a
+            out_image[pixel[1]][pixel[2]][3] = cluster.b
+        out_image[cluster.y][cluster.x][1] = 0
+        out_image[clsuter.y][cluster.x][2] = 0
+        out_image[cluster.y][cluster.x][3] = 0
+        end
+    end
+    out_image = RGB(out_image)
 
     # Return processed result
-    return blablabla
+    return out_image
 end
 
