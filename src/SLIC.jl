@@ -68,11 +68,11 @@ function slic(img, K, M, iterations=10)
     # SLIC superpixle calculation
     function cluster_pixels()
         for cluster in clusters
-            for y = (cluster.y - 2 * S):(cluster.y + 2 * S)
-                if y <= 0 || y > image_height continue end
+            for x = (cluster.x - 2 * S):(cluster.x + 2 * S)
+                if x <= 0 || x > image_width continue end
 
-                for x = (cluster.x - 2 * S):(cluster.x + 2 * S)
-                    if x <= 0 || x > image_width continue end
+                for y = (cluster.y - 2 * S):(cluster.y + 2 * S)
+                    if y <= 0 || y > image_height continue end
 
                     L = image_lab[y][x][1]
                     A = image_lab[y][x][2]
