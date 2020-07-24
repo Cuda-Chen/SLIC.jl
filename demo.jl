@@ -1,7 +1,8 @@
 using Images, ImageView, ImageCore
 include("src/SLIC.jl")
 
-input_image = load("dog.png")
+input_image = load("lenna.bmp")
+#input_image = load("dog.png")
 #imshow(input_image)
 #mosaicview(input_image)
 #save("foo.bmp", input_image)
