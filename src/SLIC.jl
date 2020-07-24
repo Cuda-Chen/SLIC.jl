@@ -15,14 +15,14 @@ function slic(img, K, M, iterations=10)
     size_tuple = size_spatial(img)
     image_height = size_tuple[1]
     image_width = size_tuple[2] 
-    S = Integer(sqrt((image_height * image_width) / K))
+    S = Int(sqrt((image_height * image_width) / K))
     clusters = Cluster[] # The properties of each cluster
-    labels = Dict() # Label of each pixel
+    #labels = Dict() # Label of each pixel
+    labels = Matrix(-1, image_height, image_width) # Label of each pixel
     distance = Matrix(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
-    pixels_count = Array{Integer}(0, # Pixel counts of each cluster
+    pixels_count = Integer[] # Pixel counts of each cluster
 
     # Initialize each cluster and its fields
-    idx = 1
     for x = div(S, 2):S:image_width
         for y = div(S, 2):S:image_height
             clusters.push!(Cluster(img_lab[y][x][1],
@@ -30,7 +30,7 @@ function slic(img, K, M, iterations=10)
                                    img_lab[y][x][3],
                                    y,
                                    x))
-            idx += 1
+            pixels_count.push!(0)
         end
     end
 
@@ -43,7 +43,7 @@ function slic(img, K, M, iterations=10)
                image_lab[y + 1][x + 1][2] - image_lab[y][x][2] + \
                image_lab[y + 1][x + 1][3] - image_lab[y][x][3]
     end
-    for cluster in clusters:
+    for cluster in clusters
         # Get current gradient of this center
         current_gradient = get_gradient(cluster.y, cluster.x)
 
@@ -67,50 +67,52 @@ function slic(img, K, M, iterations=10)
 
     # SLIC superpixle calculation
     function cluster_pixels()
-        for cluster in clusters
-            for x = (cluster.x - 2 * S):(cluster.x + 2 * S)
+        for i = 1:clusters.size()
+            for x = (clusters[i].x - 2 * S):(clusters[i].x + 2 * S)
                 if x <= 0 || x > image_width continue end
 
-                for y = (cluster.y - 2 * S):(cluster.y + 2 * S)
+                for y = (clusters[i].y - 2 * S):(clusters[i].y + 2 * S)
                     if y <= 0 || y > image_height continue end
 
                     L = image_lab[y][x][1]
                     A = image_lab[y][x][2]
                     B = image_lab[y][x][3]
-                    Dc = sqrt((L - cluster.l)^2 + 
-                              (A - cluster.a)^2 +
-                              (B - cluster.b)^2)
-                    Ds = sqrt((y - cluster.y)^2 +
-                              (x - cluster.x)^2)
+                    Dc = sqrt((L - clusters[i].l)^2 + 
+                              (A - clusters[i].a)^2 +
+                              (B - clusters[i].b)^2)
+                    Ds = sqrt((y - clusters[i].y)^2 +
+                              (x - clusters[i].x)^2)
                     D = sqrt((Dc / M)^2 + (Ds / S)^2)
 
                     if D < distance[y][x]
-                        if hashkey(labels, (y, x))
-                            labels[(y, x)] = cluster
-                            cluster.pixels.push!((y, x))
-                        else
-                            pop!(labels[(y, x)].pixels, (y, x))
-                            labels[(y, x)] = cluster
-                            cluster.pixels.push!((y, x))
-                        end
+                        distance[y][x] = D
+                        labels[y][x] = i
                     end
-                    distance[y][x] = D
                 end
             end
         end
     end
     function update_cluster_position()
-        for cluster in clusters
-            sum_h = sum_w = 0
-            pixel_count = pixels.size()
+        # Clear the position value and pixel counts of each cluster 
+        for i = 1:clusters.size()
+           clusters[i].y = clusters[i].x = pixel_count[i] = 0 
+        end
 
-            for pixel in pixels
-                sum_h += pixel[1]
-                sum_w += pixel[2]
+        # Compute the new position of new cluster center
+        for x in 1:image_width
+            for y in 1:image_height
+                label_index = labels[y][x]
+                if label_index == -1 continue end
+
+                clusters[label_index].y = y
+                clusters[label_index].x = x
+                pixel_count[label_index] += 1
             end
+        end
 
-            new_y = div(sum_h, pixel_count)
-            new_x = div(sum_w, pixel_count)
+        for cluster in clusters
+            new_y = div(cluster.y, pixel_count)
+            new_x = div(cluster.x, pixel_count)
             cluster.l = image_lab[new_y][new_x][1]
             cluster.a = image_lab[new_y][new_x][2]
             cluster.b = image_lab[new_y][new_x][3]
@@ -124,15 +126,14 @@ function slic(img, K, M, iterations=10)
     end
 
     # Create output image
+    # The color of each cluster is as same as its center
+    # except the center
     out_image = image_lab.copy()
-    for cluster in clusters
-        for pixel in cluster.pixels
-            out_image[pixel[1]][pixel[2]][1] = cluster.l
-            out_image[pixel[1]][pixel[2]][2] = cluster.a
-            out_image[pixel[1]][pixel[2]][3] = cluster.b
-        out_image[cluster.y][cluster.x][1] = 0
-        out_image[clsuter.y][cluster.x][2] = 0
-        out_image[cluster.y][cluster.x][3] = 0
+    for x = 1:image_width
+        for y = 1:image_height
+            out_image[y][x][1] = clusters[labels[y][x]].l
+            out_image[y][x][2] = clusters[labels[y][x]].a
+            out_image[y][x][3] = clusters[labels[y][x]].b
         end
     end
     out_image = RGB(out_image)
