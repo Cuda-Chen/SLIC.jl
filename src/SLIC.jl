@@ -1,13 +1,13 @@
 using Images
 
-struct Cluster
+mutable struct Cluster
     l
     a
     b
     y
     x
-    pixels = []
-    cluster_index
+    #pixels = []
+    #cluster_index
 end
 
 function slic(img, K, M, iterations=10)
@@ -16,9 +16,10 @@ function slic(img, K, M, iterations=10)
     image_height = size_tuple[1]
     image_width = size_tuple[2] 
     S = Integer(sqrt((image_height * image_width) / K))
-    clusters = Cluster[]
-    labels = Dict()
-    distance = Matrix(Inf, image_height, image_width)
+    clusters = Cluster[] # The properties of each cluster
+    labels = Dict() # Label of each pixel
+    distance = Matrix(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
+    pixels_count = Array{Integer}(0, # Pixel counts of each cluster
 
     # Initialize each cluster and its fields
     idx = 1
@@ -28,8 +29,7 @@ function slic(img, K, M, iterations=10)
                                    img_lab[y][x][2],
                                    img_lab[y][x][3],
                                    y,
-                                   x,
-                                   idx))
+                                   x))
             idx += 1
         end
     end
@@ -85,12 +85,12 @@ function slic(img, K, M, iterations=10)
                     D = sqrt((Dc / M)^2 + (Ds / S)^2)
 
                     if D < distance[y][x]
-                        if hashkey(label, (y, x))
-                            label[(y, x)] = cluster
+                        if hashkey(labels, (y, x))
+                            labels[(y, x)] = cluster
                             cluster.pixels.push!((y, x))
                         else
-                            pop!(label[(y, x)].pixels, (y, x))
-                            label[(y, x)] = cluster
+                            pop!(labels[(y, x)].pixels, (y, x))
+                            labels[(y, x)] = cluster
                             cluster.pixels.push!((y, x))
                         end
                     end
