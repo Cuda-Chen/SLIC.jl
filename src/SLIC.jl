@@ -16,11 +16,11 @@ function slic(img, K, M, iterations=10)
     size_tuple = size_spatial(img)
     image_height = size_tuple[1]
     image_width = size_tuple[2] 
-    S = convert(Int, (sqrt((image_height * image_width) / K)))
+    S = round(Int, (sqrt((image_height * image_width) / K)))
     clusters = Cluster[] # The properties of each cluster
     #labels = Dict() # Label of each pixel
-    labels = Matrix(-1, image_height, image_width) # Label of each pixel
-    distance = Matrix(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
+    labels = fill(-1, image_height, image_width) # Label of each pixel
+    distance = fill(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
     pixels_count = Integer[] # Pixel counts of each cluster
 
     # Initialize each cluster and its fields
