@@ -10,5 +10,5 @@ println(size_spatial(input_image)) # get the size of an image
 println(size_spatial(input_image)[1])
 println(size_spatial(input_image)[2])
 
-out_image = slic(input_image, 400, 30)
+out_image = slic(input_image, 400, 30, 1)
 save("foo.png", out_image)

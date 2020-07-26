@@ -21,7 +21,7 @@ function slic(img, K, M, iterations=10)
     #labels = Dict() # Label of each pixel
     labels = fill(-1, image_height, image_width) # Label of each pixel
     distance = fill(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
-    pixels_count = Integer[] # Pixel counts of each cluster
+    pixel_count = Integer[] # Pixel counts of each cluster
 
     # Initialize each cluster and its fields
     println("Initialize each cluster and its fields")
@@ -32,7 +32,7 @@ function slic(img, K, M, iterations=10)
                                    img_lab[y, x].b,
                                    y,
                                    x))
-            push!(pixels_count, 0)
+            push!(pixel_count, 0)
         end
     end
 
@@ -41,8 +41,8 @@ function slic(img, K, M, iterations=10)
         if x + 1 > image_width x = image_width - 2 end
         if y + 1 > image_height y = image_height - 2 end
 
-        return img_lab[y + 1, x + 1].l - img_lab[y, x].l + \
-               img_lab[y + 1, x + 1].a - img_lab[y, x].a + \
+        return img_lab[y + 1, x + 1].l - img_lab[y, x].l + 
+               img_lab[y + 1, x + 1].a - img_lab[y, x].a + 
                img_lab[y + 1, x + 1].b - img_lab[y, x].b
     end
     println("Move the center of each cluster to the local lowgest gradient position")
@@ -70,7 +70,7 @@ function slic(img, K, M, iterations=10)
 
     # SLIC superpixle calculation
     function cluster_pixels()
-        for i = 1:clusters.size()
+        for i = 1:length(clusters)
             for x = (clusters[i].x - 2 * S):(clusters[i].x + 2 * S)
                 if x <= 0 || x > image_width continue end
 
@@ -97,7 +97,7 @@ function slic(img, K, M, iterations=10)
     end
     function update_cluster_position()
         # Clear the position value and pixel counts of each cluster 
-        for i = 1:clusters.size()
+        for i = 1:length(clusters)
            clusters[i].y = clusters[i].x = pixel_count[i] = 0 
         end
 
@@ -107,20 +107,20 @@ function slic(img, K, M, iterations=10)
                 label_index = labels[y, x]
                 if label_index == -1 continue end
 
-                clusters[label_index].y = y
-                clusters[label_index].x = x
+                clusters[label_index].y += y
+                clusters[label_index].x += x
                 pixel_count[label_index] += 1
             end
         end
 
-        for cluster in clusters
-            new_y = div(cluster.y, pixel_count)
-            new_x = div(cluster.x, pixel_count)
-            cluster.l = img_lab[new_y, new_x].l
-            cluster.a = img_lab[new_y, new_x].a
-            cluster.b = img_lab[new_y, new_x].b
-            cluster.y = new_y
-            cluster.x = new_x
+        for i = 1:length(clusters)
+            new_y = div(clusters[i].y, pixel_count[i])
+            new_x = div(clusters[i].x, pixel_count[i])
+            clusters[i].l = img_lab[new_y, new_x].l
+            clusters[i].a = img_lab[new_y, new_x].a
+            clusters[i].b = img_lab[new_y, new_x].b
+            clusters[i].y = new_y
+            clusters[i].x = new_x
         end
     end
     for i = 1:iterations
@@ -132,15 +132,19 @@ function slic(img, K, M, iterations=10)
     # Create output image
     # The color of each cluster is as same as its center
     # except the center
-    out_image = img_lab.copy()
+    out_image = copy(img_lab)
+    println(typeof(out_image))
     for x = 1:image_width
         for y = 1:image_height
-            out_image[y, x].l = clusters[labels[y, x]].l
+            #=out_image[y, x].l = clusters[labels[y, x]].l
             out_image[y, x].a = clusters[labels[y, x]].a
-            out_image[y, x].b = clusters[labels[y, x]].b
+            out_image[y, x].b = clusters[labels[y, x]].b=#
+            out_image[y, x, :] .= Lab(clusters[labels[y, x]].l,
+                                   clusters[labels[y, x]].a,
+                                   clusters[labels[y, x]].b)
         end
     end
-    out_image = RGB(out_image)
+    out_image = RGB.(out_image)
 
     # Return processed result
     return out_image
