@@ -11,7 +11,6 @@ mutable struct Cluster
 end
 
 function slic(img, K, M, iterations=10)
-    println("Initialize internel parameters")
     img_lab = Lab.(img)
     size_tuple = size_spatial(img)
     image_height = size_tuple[1]
@@ -24,7 +23,6 @@ function slic(img, K, M, iterations=10)
     pixel_count = Integer[] # Pixel counts of each cluster
 
     # Initialize each cluster and its fields
-    println("Initialize each cluster and its fields")
     for x = div(S, 2):S:image_width
         for y = div(S, 2):S:image_height
             push!(clusters, Cluster(img_lab[y, x].l,
@@ -45,22 +43,21 @@ function slic(img, K, M, iterations=10)
                img_lab[y + 1, x + 1].a - img_lab[y, x].a + 
                img_lab[y + 1, x + 1].b - img_lab[y, x].b
     end
-    println("Move the center of each cluster to the local lowgest gradient position")
-    for cluster in clusters
+    for i = 1:length(clusters)
         # Get current gradient of this center
-        current_gradient = get_gradient(cluster.y, cluster.x)
+        current_gradient = get_gradient(clusters[i].y, clusters[i].x)
 
         for dh = -1:1
             for dw = -1:1
-                _y = cluster.y + dh
-                _x = cluster.x + dw
+                _y = clusters[i].y + dh
+                _x = clusters[i].x + dw
                 new_gradient = get_gradient(_y, _x)
                 if new_gradient < current_gradient
-                    cluster.l = img_lab[_y, _x].l
-                    cluster.a = img_lab[_y, _x].a
-                    cluster.b = img_lab[_y, _x].b
-                    cluster.y = _y
-                    cluster.x = _x
+                    clusters[i].l = img_lab[_y, _x].l
+                    clusters[i].a = img_lab[_y, _x].a
+                    clusters[i].b = img_lab[_y, _x].b
+                    clusters[i].y = _y
+                    clusters[i].x = _x
 
                     current_gradient = new_gradient
                 end
@@ -113,6 +110,7 @@ function slic(img, K, M, iterations=10)
             end
         end
 
+        # Assign the new position to each cluster
         for i = 1:length(clusters)
             new_y = div(clusters[i].y, pixel_count[i])
             new_x = div(clusters[i].x, pixel_count[i])
@@ -123,7 +121,7 @@ function slic(img, K, M, iterations=10)
             clusters[i].x = new_x
         end
     end
-    for i = 1:iterations
+    @time for i = 1:iterations
         println("SLIC iteration $(i) ...")
         cluster_pixels()
         update_cluster_position()
@@ -133,12 +131,8 @@ function slic(img, K, M, iterations=10)
     # The color of each cluster is as same as its center
     # except the center
     out_image = copy(img_lab)
-    println(typeof(out_image))
     for x = 1:image_width
         for y = 1:image_height
-            #=out_image[y, x].l = clusters[labels[y, x]].l
-            out_image[y, x].a = clusters[labels[y, x]].a
-            out_image[y, x].b = clusters[labels[y, x]].b=#
             out_image[y, x, :] .= Lab(clusters[labels[y, x]].l,
                                    clusters[labels[y, x]].a,
                                    clusters[labels[y, x]].b)
