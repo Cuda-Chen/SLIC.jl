@@ -1,5 +1,7 @@
 using Images
 
+# struct to store the Lab color values
+# and center position of each cluster
 mutable struct Cluster
     l
     a
@@ -15,7 +17,6 @@ function slic(img, K, M, iterations=10)
     image_width = size_tuple[2] 
     S = round(Int, (sqrt((image_height * image_width) / K)))
     clusters = Cluster[] # The properties of each cluster
-    #labels = Dict() # Label of each pixel
     labels = fill(-1, image_height, image_width) # Label of each pixel
     distance = fill(Inf, image_height, image_width) # Distance matrix of each pixel to belonging cluster
     pixel_count = Integer[] # Pixel counts of each cluster
