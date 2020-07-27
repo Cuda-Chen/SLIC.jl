@@ -6,8 +6,6 @@ mutable struct Cluster
     b
     y
     x
-    #pixels = []
-    #cluster_index
 end
 
 function slic(img, K, M, iterations=10)
