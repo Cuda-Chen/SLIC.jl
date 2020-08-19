@@ -128,7 +128,28 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
 
     # Enforce connectivity
     # Reference: https://github.com/scikit-image/scikit-image/blob/7e4840bd9439d1dfb6beaf549998452c99f97fdd/skimage/segmentation/_slic.pyx#L240-L348
-    function enforce_connectivity()
+    function enforce_connectivity(labels, min_size, max_size, start_label=1)
+        depth = 1 # reserved for supervoxel used, now set to 1
+        height = size(labels, 1)
+        width = size(labels, 2)
+
+        dx = [1, -1, 0, 0]
+        dy = [0, 0, 1, -1]
+        #dz = [] # reserved for supervoxel used
+       
+        # indicates that the label of this pixel has not been assigned
+        mask_label = -1
+        labels_final = fill(mask_label, height, width)
+
+        current_new_label = start_label
+        label = start_label
+
+        # used for BFS
+        current_segment_size = 1
+        bfs_visited = 0
+
+        # store neighboring pixels
+        coord_list = fill(-1, max_size, 2)
     end
     
 
