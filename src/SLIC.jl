@@ -10,7 +10,7 @@ mutable struct Cluster
     x
 end
 
-function slic(img, K, M, iterations=10)
+function slic(img, K, M, iterations=10, enforce_connectivity=False)
     img_lab = Lab.(img)
     size_tuple = size_spatial(img)
     image_height = size_tuple[1]
@@ -125,6 +125,12 @@ function slic(img, K, M, iterations=10)
         cluster_pixels()
         update_cluster_position()
     end
+
+    # Enforce connectivity
+    # Reference: https://github.com/scikit-image/scikit-image/blob/7e4840bd9439d1dfb6beaf549998452c99f97fdd/skimage/segmentation/_slic.pyx#L240-L348
+    function enforce_connectivity()
+    end
+    
 
     # Create output image
     # The color of each cluster is as same as its center
