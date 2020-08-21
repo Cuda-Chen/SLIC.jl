@@ -10,7 +10,7 @@ mutable struct Cluster
     x
 end
 
-function slic(img, K, M, iterations=10, enforce_connectivity=False)
+function slic(img, K, M, iterations=10, connectivity=false)
     img_lab = Lab.(img)
     size_tuple = size_spatial(img)
     image_height = size_tuple[1]
@@ -158,7 +158,7 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
                 if labels_final[y, x] > mask_label continue end
 
                 adjacent = 0
-                label = lables[y, x]
+                label = labels[y, x]
                 labels_final[y, x] = current_new_label
                 current_segment_size = 1
                 bfs_visited = 0
@@ -172,12 +172,11 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
                         yy = coord_list[bfs_visited, 1] + dy[i]
                         xx = coord_list[bfs_visited, 2] + dx[i]
 
-                        if yy >= 0 && yy < height &&
-                           xx >= 0 && xx < width
+                        if yy >= 0 && yy < height && xx >= 0 && xx < width
                             if labels[yy, xx] == label && labels_final[yy, xx] == mask_label
                                 labels_final[yy, xx] = current_new_label
-                                coord_list[current_segment_size, 1] = yy
-                                coord_list[current_segment_size, 2] = xx
+                                coord_list[current_segment_size, 1] = yy # <-- index problem in the future
+                                coord_list[current_segment_size, 2] = xx # <-- index problem in the future
                                 current_segment_size += 1
                                 
                                 if current_segment_size >= max_size break end
@@ -185,7 +184,6 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
                                    labels_final[yy, xx] != current_new_label
                                 adjacent = labels_final[yy, xx]
                             end
-                            end 
                         end
                     end
                     bfs_visited += 1
@@ -205,7 +203,9 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
 
         return labels_final
     end
-    
+    if connectivity
+        labels = enforce_connectivity(labels, round(Int, 0.5 * S), round(Int, 3.0 * S))
+    end
 
     # Create output image
     # The color of each cluster is as same as its center
@@ -223,4 +223,3 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
     # Return processed result
     return out_image
 end
-
