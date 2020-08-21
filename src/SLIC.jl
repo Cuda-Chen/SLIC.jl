@@ -142,14 +142,68 @@ function slic(img, K, M, iterations=10, enforce_connectivity=False)
         labels_final = fill(mask_label, height, width)
 
         current_new_label = start_label
-        label = start_label
+        #label = start_label
 
         # used for BFS
         current_segment_size = 1
         bfs_visited = 0
 
         # store neighboring pixels
+        # now set the dimension to 2 because we are using superpixel
         coord_list = fill(-1, max_size, 2)
+
+        for x = 1:width
+            for y = 1:height
+                if labels[y, x] == mask_label continue end
+                if labels_final[y, x] > mask_label continue end
+
+                adjacent = 0
+                label = lables[y, x]
+                labels_final[y, x] = current_new_label
+                current_segment_size = 1
+                bfs_visited = 0
+                coord_list[bfs_visited, 1] = y
+                coord_list[bfs_visited, 2] = x
+
+                # Preform BFS to find the size of superpixel with 
+                # same lable number
+                while bfs_visited < current_segment_size && current_segment_size < max_size
+                    for i = 1:4
+                        yy = coord_list[bfs_visited, 1] + dy[i]
+                        xx = coord_list[bfs_visited, 2] + dx[i]
+
+                        if yy >= 0 && yy < height &&
+                           xx >= 0 && xx < width
+                            if labels[yy, xx] == label && labels_final[yy, xx] == mask_label
+                                labels_final[yy, xx] = current_new_label
+                                coord_list[current_segment_size, 1] = yy
+                                coord_list[current_segment_size, 2] = xx
+                                current_segment_size += 1
+                                
+                                if current_segment_size >= max_size break end
+                            elseif labels_final[yy, xx] > mask_label &&
+                                   labels_final[yy, xx] != current_new_label
+                                adjacent = labels_final[yy, xx]
+                            end
+                            end 
+                        end
+                    end
+                    bfs_visited += 1
+                end
+
+                # merge the superpixel to its neighbor if it is too small
+                if current_segment_size < min_size
+                    for i = 1:current_segment_size
+                        labels_final[coord_list[i, 1],
+                                     coord_list[i, 2]] = adjacent
+                    end
+                else
+                    current_new_label += 1
+                end
+            end
+        end
+
+        return labels_final
     end
     
 
