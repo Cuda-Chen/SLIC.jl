@@ -133,12 +133,12 @@ function slic(img, K, M, iterations=10, connectivity=false)
         height = size(labels, 1)
         width = size(labels, 2)
 
-        dx = [1, -1, 0, 0]
-        dy = [0, 0, 1, -1]
+        dy = [1, -1, 0, 0]
+        dx = [0, 0, 1, -1]
         #dz = [] # reserved for supervoxel used
        
         # indicates that the label of this pixel has not been assigned
-        mask_label = -1
+        mask_label = start_label - 1
         labels_final = fill(mask_label, height, width)
 
         current_new_label = start_label
@@ -150,7 +150,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
 
         # store neighboring pixels
         # now set the dimension to 2 because we are using superpixel
-        coord_list = fill(-1, max_size, 2)
+        coord_list = fill(0, max_size, 2)
 
         for x = 1:width
             for y = 1:height
@@ -162,17 +162,17 @@ function slic(img, K, M, iterations=10, connectivity=false)
                 labels_final[y, x] = current_new_label
                 current_segment_size = 1
                 bfs_visited = 0
-                coord_list[bfs_visited, 1] = y
-                coord_list[bfs_visited, 2] = x
+                coord_list[bfs_visited + 1, 1] = y
+                coord_list[bfs_visited + 1, 2] = x
 
                 # Preform BFS to find the size of superpixel with 
                 # same lable number
-                while bfs_visited < current_segment_size && current_segment_size < max_size
+                while bfs_visited < current_segment_size < max_size
                     for i = 1:4
-                        yy = coord_list[bfs_visited, 1] + dy[i]
-                        xx = coord_list[bfs_visited, 2] + dx[i]
+                        yy = coord_list[bfs_visited + 1, 1] + dy[i]
+                        xx = coord_list[bfs_visited + 1, 2] + dx[i]
 
-                        if yy >= 0 && yy < height && xx >= 0 && xx < width
+                        if 1 <= yy <= height &&  1 <= xx <= width
                             if labels[yy, xx] == label && labels_final[yy, xx] == mask_label
                                 labels_final[yy, xx] = current_new_label
                                 coord_list[current_segment_size, 1] = yy # <-- index problem in the future
@@ -204,8 +204,12 @@ function slic(img, K, M, iterations=10, connectivity=false)
         return labels_final
     end
     if connectivity
-        labels = enforce_connectivity(labels, round(Int, 0.5 * S), round(Int, 3.0 * S))
+        labels = enforce_connectivity(labels, round(Int, 0.5 * image_height * image_width), round(Int, 3.0 * image_height * image_width))
     end
+
+    print(size(labels))
+    print(size(clusters))
+    print(labels[1, 1])
 
     # Create output image
     # The color of each cluster is as same as its center
