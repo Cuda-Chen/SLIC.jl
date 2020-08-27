@@ -189,9 +189,13 @@ function slic(img, K, M, iterations=10, connectivity=false)
                     bfs_visited += 1
                 end
 
+                #for i = 1:current_segment_size println(coord_list[i, 1]) end
+                #println(max_size, " ", current_segment_size)
+
                 # merge the superpixel to its neighbor if it is too small
                 if current_segment_size < min_size
                     for i = 1:current_segment_size
+                        #println(i, " ", coord_list[i, 1])
                         labels_final[coord_list[i, 1],
                                      coord_list[i, 2]] = adjacent
                     end
@@ -204,7 +208,8 @@ function slic(img, K, M, iterations=10, connectivity=false)
         return labels_final
     end
     if connectivity
-        labels = enforce_connectivity(labels, round(Int, 0.5 * image_height * image_width), round(Int, 3.0 * image_height * image_width))
+        segment_size = image_height * image_width / size(clusters, 1)
+        labels = enforce_connectivity(labels, round(Int, 0.5 * segment_size), round(Int, 3.0 * segment_size))
     end
 
     print(size(labels))
