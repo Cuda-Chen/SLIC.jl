@@ -133,8 +133,8 @@ function slic(img, K, M, iterations=10, connectivity=false)
         height = size(labels, 1)
         width = size(labels, 2)
 
-        dy = [1, -1, 0, 0]
-        dx = [0, 0, 1, -1]
+        dx = [1, -1, 0, 0]
+        dy = [0, 0, 1, -1]
         #dz = [] # reserved for supervoxel used
        
         # indicates that the label of this pixel has not been assigned
@@ -167,7 +167,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
 
                 # Preform BFS to find the size of superpixel with 
                 # same lable number
-                while bfs_visited < current_segment_size < max_size
+                while bfs_visited <= current_segment_size <= max_size
                     for i = 1:4
                         yy = coord_list[bfs_visited + 1, 1] + dy[i]
                         xx = coord_list[bfs_visited + 1, 2] + dx[i]
@@ -195,7 +195,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
                 # merge the superpixel to its neighbor if it is too small
                 if current_segment_size < min_size
                     for i = 1:current_segment_size
-                        #println(i, " ", coord_list[i, 1])
+                        println(i, " ", coord_list[i, 1])
                         labels_final[coord_list[i, 1],
                                      coord_list[i, 2]] = adjacent
                     end
