@@ -167,7 +167,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
 
                 # Preform BFS to find the size of superpixel with 
                 # same lable number
-                while bfs_visited <= current_segment_size <= max_size
+                while bfs_visited < current_segment_size <= max_size
                     for i = 1:4
                         yy = coord_list[bfs_visited + 1, 1] + dy[i]
                         xx = coord_list[bfs_visited + 1, 2] + dx[i]
@@ -175,11 +175,11 @@ function slic(img, K, M, iterations=10, connectivity=false)
                         if 1 <= yy <= height &&  1 <= xx <= width
                             if labels[yy, xx] == label && labels_final[yy, xx] == mask_label
                                 labels_final[yy, xx] = current_new_label
-                                coord_list[current_segment_size, 1] = yy # <-- index problem in the future
-                                coord_list[current_segment_size, 2] = xx # <-- index problem in the future
+                                coord_list[current_segment_size + 1, 1] = yy # <-- index problem in the future
+                                coord_list[current_segment_size + 1, 2] = xx # <-- index problem in the future
                                 current_segment_size += 1
                                 
-                                if current_segment_size >= max_size break end
+                                if current_segment_size > max_size break end
                             elseif labels_final[yy, xx] > mask_label &&
                                    labels_final[yy, xx] != current_new_label
                                 adjacent = labels_final[yy, xx]
@@ -195,7 +195,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
                 # merge the superpixel to its neighbor if it is too small
                 if current_segment_size < min_size
                     for i = 1:current_segment_size
-                        println(i, " ", coord_list[i, 1])
+                        #println(i, " ", coord_list[i, 1])
                         labels_final[coord_list[i, 1],
                                      coord_list[i, 2]] = adjacent
                     end
