@@ -194,7 +194,7 @@ function slic(img, K, M, iterations=10, connectivity=false)
 
                 # merge the superpixel to its neighbor if it is too small
                 if current_segment_size < min_size
-                    for i = 1:current_segment_size
+                    @inbouds @simd for i = 1:current_segment_size
                         #println(i, " ", coord_list[i, 1])
                         labels_final[coord_list[i, 1],
                                      coord_list[i, 2]] = adjacent
